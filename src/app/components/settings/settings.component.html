@@ -1,0 +1,54 @@
+<div class="settings-container">
+  <button class="settings-btn" (click)="toggleSettings()">
+    <i class="fas fa-cog"></i>
+  </button>
+
+  <div class="settings-panel" [ngClass]="{ 'show': isVisible }">
+    <h3>Settings</h3>
+    
+    <div class="setting-item">
+      <label for="voiceSelect">Voice:</label>
+      <select 
+        id="voiceSelect" 
+        [(ngModel)]="selectedVoiceIndex" 
+        (change)="onVoiceChange()">
+        <option value="-1">Default Voice</option>
+        <option 
+          *ngFor="let voice of voices; let i = index" 
+          [value]="i">
+          {{ voice.name }} ({{ voice.lang }})
+        </option>
+      </select>
+    </div>
+
+    <div class="setting-item">
+      <label for="speedRange">Speed:</label>
+      <div>
+        <input 
+          type="range" 
+          id="speedRange" 
+          min="0.5" 
+          max="2" 
+          step="0.1" 
+          [(ngModel)]="settings.rate"
+          (input)="onRateChange()">
+        <span class="value">{{ settings.rate.toFixed(1) }}</span>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <label for="pitchRange">Pitch:</label>
+      <div>
+        <input 
+          type="range" 
+          id="pitchRange" 
+          min="0.5" 
+          max="2" 
+          step="0.1" 
+          [(ngModel)]="settings.pitch"
+          (input)="onPitchChange()">
+        <span class="value">{{ settings.pitch.toFixed(1) }}</span>
+      </div>
+    </div>
+  </div>
+</div>
