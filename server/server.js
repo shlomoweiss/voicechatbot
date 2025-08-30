@@ -32,8 +32,15 @@ function checkForOrderJSON(responseText) {
     if (jsonMatch) {
       jsonString = jsonMatch[1].trim();
     } else {
-      // If no markdown code block found, try to parse the entire response as JSON
-      jsonString = responseText.trim();
+      // Look for the new format with channel/constrain/message tags
+      const channelMatch = responseText.match(/<\|channel\|>.*?<\|constrain\|>json<\|message\|>\s*([\s\S]*)/i);
+      
+      if (channelMatch) {
+        jsonString = channelMatch[1].trim();
+      } else {
+        // If no special format found, try to parse the entire response as JSON
+        jsonString = responseText.trim();
+      }
     }
     
     const parsedOrder = JSON.parse(jsonString);
@@ -100,7 +107,8 @@ app.post('/api/chat', async (req, res) => {
                 the size can be one of the following: small, medium, large
                 the toppings can be any combination of the following: mushrooms, onions, olives, peppers, extra cheese
                 the special instructions should be ONLY related to pizza preparation (e.g., "light on cheese", "well done")
-                YOU ARE NOT ALLOWED GIVE INFORMATION OUTSIDE OF PIZZA ORDERING `
+                YOU ARE NOT ALLOWED GIVE INFORMATION OUTSIDE OF PIZZA ORDERING
+                you CAN NOT use ever ** in the answer`
 
       }
     ];
