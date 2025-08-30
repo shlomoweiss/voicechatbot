@@ -83,6 +83,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.voiceChatService.toggleVoiceRecording();
   }
 
+  clearConversation(): void {
+    if (confirm('Are you sure you want to clear the conversation?')) {
+      this.voiceChatService.clearConversation();
+    }
+  }
+
   onInputKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();

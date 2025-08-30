@@ -1,5 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { ApiService } from './api.service';
 
 export interface Message {
   content: string;
@@ -46,12 +47,17 @@ export class VoiceChatService {
     pitch: 1
   };
 
-  constructor(private ngZone: NgZone) {
+  constructor(private ngZone: NgZone, private apiService: ApiService) {
     this.synthesis = window.speechSynthesis;
     this.initializeSpeechRecognition();
     this.initializeTextToSpeech();
     this.loadSettings();
     this.addWelcomeMessage();
+    
+    // Check API health on startup
+    setTimeout(() => {
+      this.checkApiHealth();
+    }, 1000);
   }
 
   private addWelcomeMessage(): void {
@@ -179,24 +185,51 @@ export class VoiceChatService {
   }
 
   private generateAIResponse(userMessage: string): void {
-    setTimeout(() => {
-      this.ngZone.run(() => {
-        this.isLoadingSubject.next(false);
+    this.apiService.sendChatMessage(userMessage).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          this.isLoadingSubject.next(false);
 
-        const response = this.getAIResponse(userMessage);
-        const assistantMessage: Message = {
-          content: response,
-          sender: 'assistant',
-          timestamp: new Date()
-        };
+          const assistantMessage: Message = {
+            content: response.response,
+            sender: 'assistant',
+            timestamp: new Date()
+          };
 
-        const currentMessages = this.messagesSubject.value;
-        this.messagesSubject.next([...currentMessages, assistantMessage]);
-        
-        // Speak the response
-        this.speakText(response);
-      });
-    }, Math.random() * 2000 + 1000); // Random delay between 1-3 seconds
+          const currentMessages = this.messagesSubject.value;
+          this.messagesSubject.next([...currentMessages, assistantMessage]);
+          
+          // Speak the response
+          this.speakText(response.response);
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+          this.isLoadingSubject.next(false);
+          
+          // Use fallback message if available, otherwise use a generic error message
+          const errorMessage = error.fallback || 'Sorry, I encountered an error. Please try again.';
+          
+          const assistantMessage: Message = {
+            content: errorMessage,
+            sender: 'assistant',
+            timestamp: new Date()
+          };
+
+          const currentMessages = this.messagesSubject.value;
+          this.messagesSubject.next([...currentMessages, assistantMessage]);
+          
+          // Speak the error message
+          this.speakText(errorMessage);
+          
+          // Show error status
+          this.updateVoiceStatus('Connection error', 'error');
+          setTimeout(() => {
+            this.updateVoiceStatus('', '');
+          }, 3000);
+        });
+      }
+    });
   }
 
   private getAIResponse(message: string): string {
@@ -330,5 +363,41 @@ export class VoiceChatService {
         console.error('Error loading settings:', error);
       }
     }
+  }
+
+  public clearConversation(): void {
+    this.apiService.clearConversation().subscribe({
+      next: () => {
+        this.messagesSubject.next([]);
+        this.addWelcomeMessage();
+      },
+      error: (error) => {
+        console.error('Error clearing conversation:', error);
+        // Still clear locally even if server fails
+        this.messagesSubject.next([]);
+        this.addWelcomeMessage();
+      }
+    });
+  }
+
+  public checkApiHealth(): void {
+    this.apiService.checkHealth().subscribe({
+      next: (health) => {
+        console.log('API Health:', health);
+        if (!health.hasOpenAIKey) {
+          this.updateVoiceStatus('API key not configured', 'error');
+          setTimeout(() => {
+            this.updateVoiceStatus('', '');
+          }, 5000);
+        }
+      },
+      error: (error) => {
+        console.error('Health check failed:', error);
+        this.updateVoiceStatus('Server connection failed', 'error');
+        setTimeout(() => {
+          this.updateVoiceStatus('', '');
+        }, 3000);
+      }
+    });
   }
 }

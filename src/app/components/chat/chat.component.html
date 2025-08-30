@@ -48,6 +48,12 @@
       </textarea>
       <div class="input-actions">
         <button 
+          class="clear-btn"
+          (click)="clearConversation()"
+          title="Clear conversation">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button 
           class="voice-btn"
           [ngClass]="{ 'recording': isRecording }"
           (click)="toggleVoiceRecording()">

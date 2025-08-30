@@ -168,7 +168,7 @@
     align-items: center;
 }
 
-.voice-btn, .send-btn {
+.voice-btn, .send-btn, .clear-btn {
     width: 44px;
     height: 44px;
     border: none;
@@ -211,6 +211,17 @@
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+.clear-btn {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    color: white;
+    margin-right: 0.5rem;
+}
+
+.clear-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
 }
 
 /* Voice status */
@@ -289,7 +300,7 @@
         padding: 0.875rem 1rem;
     }
 
-    .voice-btn, .send-btn {
+    .voice-btn, .send-btn, .clear-btn {
         width: 40px;
         height: 40px;
         font-size: 1rem;
