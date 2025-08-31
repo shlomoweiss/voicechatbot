@@ -106,16 +106,29 @@ app.post('/api/chat', async (req, res) => {
                 type of pizza can be one of the following: margherita, pepperoni, hawaiian, veggie
                 the size can be one of the following: small, medium, large
                 the toppings can be any combination of the following: mushrooms, onions, olives, peppers, extra cheese
-                the special instructions should be ONLY related to pizza preparation (e.g., "light on cheese", "well done")
+                the special instructions should be ONLY RELATED to pizza PREPARATION (e.g., "light on cheese", "well done")
                 YOU ARE NOT ALLOWED GIVE INFORMATION OUTSIDE OF PIZZA ORDERING
                 you CAN NOT use ever ** in the answer`
 
       }
     ];
+    if (history.length > 21) { // 20 messages + system message
+        tempmessage=`summary of last 20 messages: ${history.slice(-20).map(msg => `${msg.role}: ${msg.content}`).join(' | ')}`;
+        history = [history[0], { role: 'user', content: tempmessage }];
+        tempCompletion=await openai.chat.completions.create({
+          model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+          messages: history,
+          max_tokens: 500,
+          temperature: 0.7
+        });
+      history.push({ role: 'assistant', content: tempCompletion.choices[0]?.message?.content || '' });
+
+    }
+
 
     // Add user message to history 
     history.push({ role: 'user', content: message });
-
+    
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
